@@ -5,14 +5,18 @@ from message import create_header, check_header
 def start_chatting(s,host,port):
     uname = input('enter username: ')
     while(True):
-        print('wait on rely ....')
         reply,host_from = s.recvfrom(1024)
-        if reply.decode() == 'quit':
-            break
+        sq = check_header(reply)[2]
 
-        print(reply.decode())
+        m = create_header('cm','ACK',sq,uname,'')#sends back ACK after receiving a message
+        #print('sending ACK ',m)
+        s.sendto(m,host_from)
+        if check_header(reply)[5] == 'quit':
+            break
         message = input(f'{uname}: ')
-        s.sendto(message.encode(),host_from)
+        m = create_header('chat','send message',sq,uname,message)#send the real message
+        print(check_header(reply)[5])
+        s.sendto(m,host_from)
         if message =='quit':
             break
 

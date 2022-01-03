@@ -5,16 +5,21 @@ from message import create_header, check_header
 def start_chatting(s,host,port):
     print('welcome to Jacquelines and Rados SIMP V1.0.0')
     uname = input('enter username: ')
+    sq = 0
     while(True):
+        sq+=1
         message = input(f'{uname}: ')
-        s.sendto(message.encode(),(host,port))
+        m = create_header('chat','send message',sq,uname,message)
+        #print(m)      
+        s.sendto(m,(host,port)) #send original message
         if message =='quit':
             break
-
-        reply,host_from = s.recvfrom(1024)
-        if reply.decode() == 'quit':                
+        reply,host_from = s.recvfrom(1024) #gets ACK message
+        #print('ACK', reply)
+        reply,host_from = s.recvfrom(1024) #gets the real message
+        if check_header(reply)[5] == 'quit':         
             break
-        print(reply.decode())
+        print(check_header(reply)[5])
     return 0
 
 def handshake(s,host,port):
@@ -23,7 +28,7 @@ def handshake(s,host,port):
         sq=0
         m = create_header('cm','SYN',sq,'name','')
         s.sendto(m, (host, port))
-        print('send SYN')
+        print('send SYN....')
         #get reply
         try:
             reply,host_from = s.recvfrom(1024)
