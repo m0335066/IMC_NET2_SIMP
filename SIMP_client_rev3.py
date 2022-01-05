@@ -6,26 +6,45 @@ def start_chatting(s,host,port):
     print('welcome to Jacquelines and Rados SIMP V1.0.0')
     #uname = input('enter username: ')
     uname = 'jacqui'
-    sq = 0
+    sq_user = 0
+    sq_server = 100
+    message = input(f'{uname}: ')
     while(True):   
-        message = input(f'{uname}: ')
-        m = create_header('chat','send message',sq,uname,message)
-        #send chat message
+        
+        m = create_header('chat','send message',sq_user,uname,message)
+        ################################################send chat message
         s.sendto(m,(host,port))
-
-        #wait for chat ACK
-        reply, host_from = s.recvfrom(1024)
-        print('receive ACK', reply)
-        while (reply[2]!=sq):
+        #print('sending sq: ', m[2])
+        s.settimeout(5)
+        ##########wait for chat ACK
+        try:
             reply, host_from = s.recvfrom(1024)
-            break
-
+            print(reply[2],' vs ',sq_user)
+            while (reply[2]!=sq_user):###################################
+                print('2: discard frame with sq nb =', reply[2])
+                reply, host_from = s.recvfrom(1024)
+        except socket.timeout:
+            print('STO: resend' , m , 'with sq = ', m[2])
+            continue
+        
         #receive chat message after ACK
+        s.settimeout(None)
         reply, host_from = s.recvfrom(1024)
-        print('receive chat', reply)
+        print(reply[2],' vs ',sq_server)
+        while(reply[2]!=sq_server):########################################
+            print('2: discard frame with sq nb =', reply[2])
+            #reject message if sq doesnt match 
+            reply, host_from = s.recvfrom(1024)
+        print(check_header(reply)[3], ': ', check_header(reply)[5])
         #send back ACK
         m = create_header('cm','ACK',reply[2],uname,'')
+        sq_server = reply[2]
+        time.sleep(11)########################################change to delay ACKs
         s.sendto(m,(host,port))
+        #print('sending sq: ', m[2])
+        message = input(f'{uname}: ')
+        sq_user = sq_user + 1
+        sq_server = sq_server + 1
 
     return 0
 

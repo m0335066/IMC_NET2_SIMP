@@ -5,28 +5,45 @@ from message import create_header, check_header
 def start_chatting(s,host,port):
     #uname = input('enter username: ')
     uname = 'server'
-    sq = 100
+    sq_server = 100
+    sq_user = 0
     while(True):
         #receive chat meesage
         reply,host_from = s.recvfrom(1024)
-        print('receive chat', reply)
+        print(reply[2],' vs ',sq_user)
+        while (reply[2]!=sq_user):###################################
+            #reject message if sq doesnt match 
+            reply,host_from = s.recvfrom(1024)
+
+        print(check_header(reply)[3], ': ', check_header(reply)[5])
         #send back ACK
         m = create_header('cm','ACK',reply[2],uname,'')
+        sq_user = reply[2]
+        time.sleep(7) ########################################change to delay ACKs
         s.sendto(m,host_from)
-        print('sendin back ACK', m[1])
+        #print('sending sq: ', m[2])
 
-        #send chat message
-        sq += 1
+        ########################################send chat message
         message = input(f'{uname}: ')
-        m = create_header('chat','send message',sq,uname,message)
-        s.sendto(m,host_from)        
-
-        #wait for chat ACK
-        reply, host_from = s.recvfrom(1024)
-        print('receive ACK', reply)
-        while (reply[2]!=sq):
-            reply, host_from = s.recvfrom(1024)
-            break
+        while(True):
+            m = create_header('chat','send message',sq_server,uname,message)
+            s.sendto(m,host_from)    
+            #print('sending sq: ', m[2])    
+            s.settimeout(5)
+            try:
+                reply, host_from = s.recvfrom(1024) 
+                print(reply[2],' vs ',sq_server)
+                while (reply[2]!=sq_server):#############################
+                    print('2: discard frame with sq nb =', reply[2])
+                    reply, host_from = s.recvfrom(1024)
+            except socket.timeout:
+                print('STO: resend' , m , 'with sq = ', m[2])
+                continue
+            break   
+        s.settimeout(None)
+        sq_server = sq_server + 1  
+        sq_user = sq_user + 1  
+        
 
     return 0
 
