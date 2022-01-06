@@ -1,5 +1,9 @@
-import string
+'''
+AUTHORS: JACQUELINE BERGER AND RADOMIR ROMAN
+COURSE: NETWORKING 2
+'''
 
+import string
 
 def create_header(message_type:string , operation: string, sequence_nb: int, username: string , message: string ):
     '''
@@ -55,6 +59,12 @@ def create_header(message_type:string , operation: string, sequence_nb: int, use
         #assign payload at index 5
         b_arr += message.encode('ASCII')
     #print(f'send {operation}')
+    else:
+        #assign payload len at index 4
+        b_arr += (0).to_bytes(1,byteorder ='little')
+
+        #assign payload at index 5
+        b_arr += message.encode('ASCII')
     return b_arr
 
 
@@ -66,15 +76,23 @@ def check_header(header:bytearray):
     '''
     h = header
     mtype = h[0]
-    operation = h[1]
-    chat_message = h[36:].decode('ASCII')
-    message_length = h[35]
-    name = h[5:35].decode('ASCII').replace('0','')
-    sequnr = h[2]
-    return (mtype, operation, sequnr, name, message_length, chat_message)
+    if mtype == 1: #chat message
+        operation = h[1]
+        chat_message = h[36:].decode('ASCII')
+        message_length = h[35]
+        name = h[5:35].decode('ASCII').replace('0','')
+        sequnr = h[2]
+        return (mtype, operation, sequnr, name, message_length, chat_message)
+    else: #control message
+        operation = h[1]
+        name = h[5:35].decode('ASCII').replace('0','')
+        sequnr = h[2]
+        return (mtype, operation, sequnr, name,0,'')
 
 
 
+'''
+MANUAL TESTING:
 sq = 1
 control_mess = create_header('cm','ACK',sq,'username','')
 sq = 2
@@ -86,4 +104,5 @@ print('control message SYN+ACK: ',control_mess1)
 print('chat message ', chat_mess)
 
 print(check_header(chat_mess))
+'''
 
