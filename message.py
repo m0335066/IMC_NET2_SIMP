@@ -91,18 +91,5 @@ def check_header(header:bytearray):
 
 
 
-'''
-MANUAL TESTING:
-sq = 1
-control_mess = create_header('cm','ACK',sq,'username','')
-sq = 2
-control_mess1 = create_header('cm','SYN+ACK',sq,'username','')
-chat_mess = create_header('chat','send message',sq,'RADOMIR','hello this is Rado')
 
-print('control message ACK: ',control_mess)
-print('control message SYN+ACK: ',control_mess1)
-print('chat message ', chat_mess)
-
-print(check_header(chat_mess))
-'''
 
